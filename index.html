@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>禁止狗发情</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>禁止狗发情</h1>
+        
+        <!-- 图片上传区域 -->
+        <div class="upload-section">
+            <label for="imageInput" class="file-label">
+                <span>选择图片</span>
+                <input type="file" id="imageInput" accept="image/*" hidden>
+            </label>
+            <div class="preview-box">
+                <img id="preview" alt="预览区域">
+            </div>
+        </div>
+
+        <!-- 操作按钮组 -->
+        <div class="action-group">
+            <button class="action-btn" onclick="processImage()">
+                <span class="btn-text">生成图片</span>
+                <div class="loading-spinner" hidden></div>
+            </button>
+            <a id="downloadLink" class="action-btn" hidden download="watermarked-image.png">
+                <span class="btn-text">下载图片</span>
+            </a>
+        </div>
+
+        <!-- 画布区域 -->
+        <canvas id="canvas" hidden></canvas>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
