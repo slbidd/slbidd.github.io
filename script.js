@@ -60,7 +60,7 @@ async function processImage() {
         const processBtn = document.querySelector('button.action-btn');
         const spinner = processBtn.querySelector('.loading-spinner');
         const btnText = processBtn.querySelector('.btn-text');
-        btnText.textContent = '添加水印';
+        btnText.textContent = '生成图片';
         spinner.hidden = true;
         processBtn.disabled = false;
         isProcessing = false;
