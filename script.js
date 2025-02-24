@@ -1,119 +1,134 @@
-const canvas = document.getElementById('canvas');
-const ctx = canvas.getContext('2d');
-let isProcessing = false;
+let cropper = null;
+let currentOpacity = 1.0;
 
-async function processImage() {
-    if (isProcessing) return;
-    isProcessing = true;
+// 初始化事件监听
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('imageInput').addEventListener('change', handleFileSelect);
+    document.getElementById('generateBtn').addEventListener('click', generateWatermark);
+    document.getElementById('resetBtn').addEventListener('click', resetApp);
+    document.getElementById('newProcessBtn').addEventListener('click', resetApp);
+    document.querySelector('.opacity-slider').addEventListener('input', e => updateOpacity(e.target.value));
+});
+
+// 处理文件选择
+function handleFileSelect(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        showCropSection(e.target.result);
+    };
+    reader.readAsDataURL(file);
+}
+
+// 显示裁剪界面
+function showCropSection(imageSrc) {
+    document.querySelector('.upload-section').hidden = true;
+    document.querySelector('.crop-section').hidden = false;
+    document.querySelector('.result-section').hidden = true;
+
+    if (cropper) cropper.destroy();
     
+    const image = document.getElementById('cropImage');
+    image.src = imageSrc;
+    
+    cropper = new Cropper(image, {
+        aspectRatio: 1,
+        viewMode: 2,
+        autoCropArea: 0.8,
+        guides: false,
+        background: false
+    });
+}
+
+// 更新透明度
+function updateOpacity(value) {
+    currentOpacity = value / 100;
+    document.getElementById('opacityValue').textContent = `${value}%`;
+}
+
+// 生成水印
+async function generateWatermark() {
+    if (!cropper) return;
+
     try {
-        // 显示加载状态
-        const processBtn = document.querySelector('button.action-btn');
-        const spinner = processBtn.querySelector('.loading-spinner');
-        const btnText = processBtn.querySelector('.btn-text');
-        btnText.textContent = '处理中...';
-        spinner.hidden = false;
-        processBtn.disabled = true;
+        toggleButtons(true);
+        
+        const croppedCanvas = cropper.getCroppedCanvas({
+            width: 1000,
+            height: 1000,
+            fillColor: '#fff'
+        });
 
-        const input = document.getElementById('imageInput');
-        const preview = document.getElementById('preview');
-        const link = document.getElementById('downloadLink');
-
-        // 验证输入
-        if (!input.files[0]) {
-            throw new Error('请选择图片文件');
-        }
-        if (!input.files[0].type.startsWith('image/')) {
-            throw new Error('仅支持图片文件');
-        }
-
-        // 加载主图片
-        const mainImage = await loadImage(URL.createObjectURL(input.files[0]));
-        preview.src = URL.createObjectURL(input.files[0]);
-        preview.style.display = 'block';
-
-        // 图片处理流程
-        const processedImage = adjustAndCrop(mainImage);
         const watermark = await loadImage('watermark.png');
+        const resultCanvas = await compositeImage(croppedCanvas, watermark);
         
-        canvas.width = 1000;
-        canvas.height = 1000;
-        
-        // 绘制主图
-        ctx.imageSmoothingEnabled = true;
-        ctx.imageSmoothingQuality = 'high';
-        ctx.drawImage(processedImage, 0, 0, 1000, 1000);
-        
-        // 添加水印
-        ctx.globalAlpha = 1;
-        ctx.drawImage(watermark, 0, 0, 1000, 1000);
-        
-        // 显示结果
-        preview.src = canvas.toDataURL('image/png');
-        link.href = preview.src;
-        link.hidden = false;
+        showResult(resultCanvas);
     } catch (error) {
-        console.error('处理失败:', error);
-        alert(`错误: ${error.message}`);
+        alert('处理失败: ' + error.message);
     } finally {
-        // 重置按钮状态
-        const processBtn = document.querySelector('button.action-btn');
-        const spinner = processBtn.querySelector('.loading-spinner');
-        const btnText = processBtn.querySelector('.btn-text');
-        btnText.textContent = '生成图片';
-        spinner.hidden = true;
-        processBtn.disabled = false;
-        isProcessing = false;
+        toggleButtons(false);
     }
 }
 
+// 合成图片
+function compositeImage(baseImage, watermark) {
+    return new Promise(resolve => {
+        const canvas = document.createElement('canvas');
+        canvas.width = 1000;
+        canvas.height = 1000;
+        
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(baseImage, 0, 0);
+        ctx.globalAlpha = currentOpacity;
+        ctx.drawImage(watermark, 0, 0, 1000, 1000);
+        
+        resolve(canvas);
+    });
+}
+
+// 显示结果
+function showResult(canvas) {
+    canvas.toBlob(blob => {
+        const url = URL.createObjectURL(blob);
+        document.getElementById('resultImage').src = url;
+        document.getElementById('downloadLink').href = url;
+        
+        document.querySelector('.crop-section').hidden = true;
+        document.querySelector('.result-section').hidden = false;
+    }, 'image/png');
+}
+
+// 重置应用
+function resetApp() {
+    if (document.getElementById('resultImage').src) {
+        URL.revokeObjectURL(document.getElementById('resultImage').src);
+    }
+    
+    document.getElementById('imageInput').value = '';
+    document.querySelector('.upload-section').hidden = false;
+    document.querySelector('.crop-section').hidden = true;
+    document.querySelector('.result-section').hidden = true;
+    
+    if (cropper) {
+        cropper.destroy();
+        cropper = null;
+    }
+}
+
+// 通用工具函数
 function loadImage(src) {
     return new Promise((resolve, reject) => {
         const img = new Image();
-        img.crossOrigin = 'Anonymous';
         img.onload = () => resolve(img);
-        img.onerror = (e) => reject(new Error('图片加载失败'));
+        img.onerror = reject;
         img.src = src;
     });
 }
 
-function adjustAndCrop(img) {
-    const tempCanvas = document.createElement('canvas');
-    const tempCtx = tempCanvas.getContext('2d');
-    
-    // 计算最佳缩放比例
-    const scaleRatio = Math.max(1000 / img.width, 1000 / img.height);
-    const scaledWidth = img.width * scaleRatio;
-    const scaledHeight = img.height * scaleRatio;
-    
-    // 缩放图片
-    tempCanvas.width = scaledWidth;
-    tempCanvas.height = scaledHeight;
-    tempCtx.imageSmoothingQuality = 'high';
-    tempCtx.drawImage(img, 0, 0, scaledWidth, scaledHeight);
-    
-    // 裁剪居中区域
-    const x = (scaledWidth - 1000) / 2;
-    const y = (scaledHeight - 1000) / 2;
-    
-    const croppedCanvas = document.createElement('canvas');
-    croppedCanvas.width = 1000;
-    croppedCanvas.height = 1000;
-    croppedCanvas.getContext('2d').drawImage(
-        tempCanvas,
-        x, y, 1000, 1000,
-        0, 0, 1000, 1000
-    );
-    
-    return croppedCanvas;
+function toggleButtons(disabled) {
+    document.querySelectorAll('.action-btn').forEach(btn => {
+        btn.disabled = disabled;
+    });
 }
-
-// 实时预览
-document.getElementById('imageInput').addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    if (file) {
-        const preview = document.getElementById('preview');
-        preview.src = URL.createObjectURL(file);
-        preview.style.display = 'block';
-    }
-});

@@ -1,133 +1,255 @@
-/* 基础重置 */
+/* style.css */
+/* 基础样式重置 */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: 'Segoe UI', system-ui, sans-serif;
+    font-family: system-ui, -apple-system, sans-serif;
+}
+
+html {
+    scroll-behavior: smooth;
 }
 
 body {
     background: #f0f2f5;
     color: #333;
     line-height: 1.6;
+    padding: 1rem;
+    min-height: 100vh;
 }
 
+/* 容器样式 */
 .container {
     max-width: 1000px;
-    margin: 2rem auto;
-    padding: 2rem;
+    margin: 0 auto;
     background: white;
+    padding: 2rem;
     border-radius: 12px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    overflow-x: hidden;
 }
 
 h1 {
     text-align: center;
-    margin-bottom: 2rem;
     color: #2c3e50;
+    margin-bottom: 1.5rem;
+    font-size: 2rem;
 }
 
 /* 上传区域 */
 .upload-section {
-    border: 2px dashed #ccc;
-    border-radius: 8px;
+    border: 2px dashed #d1d5db;
+    border-radius: 10px;
     padding: 2rem;
-    margin-bottom: 2rem;
-    transition: border-color 0.3s;
+    text-align: center;
+    transition: border-color 0.3s ease;
 }
 
 .upload-section:hover {
-    border-color: #007bff;
+    border-color: #3b82f6;
 }
 
 .file-label {
     display: inline-block;
-    padding: 12px 24px;
-    background: #007bff;
+    padding: 0.8rem 1.5rem;
+    background: #3b82f6;
     color: white;
-    border-radius: 6px;
+    border-radius: 8px;
     cursor: pointer;
-    transition: transform 0.2s;
+    transition: all 0.2s ease;
+    font-size: 1rem;
 }
 
 .file-label:hover {
-    transform: translateY(-2px);
+    background: #2563eb;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3);
 }
 
-.preview-box {
-    margin-top: 1.5rem;
-    min-height: 300px;
-    background: #f8f9fa;
-    border-radius: 6px;
+/* 裁剪区域 */
+.crop-section {
+    position: relative;
+    margin: 1.5rem 0;
+}
+
+.cropper-container {
+    background: #f8fafc;
+    border-radius: 8px;
     overflow: hidden;
+    max-height: 60vh;
+    height: 500px;  /* 默认桌面高度 */
+    margin: 1rem 0;
+    position: relative;
 }
 
-#preview {
-    width: 100%;
-    height: auto;
-    display: none;
-}
-
-/* 操作按钮 */
-.action-group {
+/* 控制面板 */
+.controls {
+    margin: 1.5rem 0;
     display: flex;
     gap: 1rem;
-    justify-content: center;
     flex-wrap: wrap;
-}
-
-.action-btn {
-    position: relative;
-    padding: 12px 32px;
-    border: none;
-    border-radius: 6px;
-    background: #007bff;
-    color: white;
-    cursor: pointer;
-    text-decoration: none;
-    display: inline-flex;
+    justify-content: center;
     align-items: center;
-    gap: 8px;
-    transition: all 0.3s ease;
 }
 
-.action-btn:hover {
-    background: #0056b3;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+.slider-container {
+    background: #f1f5f9;
+    padding: 1rem;
+    border-radius: 8px;
+    min-width: 260px;
+    flex-grow: 1;
 }
 
-.action-btn[hidden] {
-    display: none;
+.opacity-slider {
+    width: 100%;
+    height: 6px;
+    margin-top: 0.5rem;
+    -webkit-appearance: none;
+    background: #cbd5e1;
+    border-radius: 3px;
+    outline: none;
 }
 
-/* 加载动画 */
-.loading-spinner {
+.opacity-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
     width: 18px;
     height: 18px;
-    border: 3px solid rgba(255,255,255,0.3);
-    border-top-color: white;
+    background: #3b82f6;
     border-radius: 50%;
-    animation: spin 1s linear infinite;
+    cursor: pointer;
+    transition: background 0.2s;
 }
 
-@keyframes spin {
-    to { transform: rotate(360deg); }
+.opacity-slider::-webkit-slider-thumb:hover {
+    background: #2563eb;
+}
+
+/* 按钮样式 */
+.action-btn {
+    padding: 0.8rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.action-btn:not(.secondary) {
+    background: #3b82f6;
+    color: white;
+}
+
+.action-btn:not(.secondary):hover {
+    background: #2563eb;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3);
+}
+
+.action-btn.secondary {
+    background: #64748b;
+    color: white;
+}
+
+.action-btn.secondary:hover {
+    background: #475569;
+}
+
+/* 结果区域 */
+.result-section {
+    text-align: center;
+    margin-top: 1.5rem;
+}
+
+#resultImage {
+    max-width: 80%;
+    max-height: 60vh;
+    height: auto;
+    border-radius: 8px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+    object-fit: contain;
 }
 
 /* 响应式设计 */
 @media (max-width: 768px) {
     .container {
-        margin: 1rem;
         padding: 1.5rem;
+        border-radius: 0;
     }
-    
-    .action-group {
-        flex-direction: column;
-        width: 100%;
+
+    .cropper-container {
+        max-height: 50vh;
+        height: 300px;  /* 移动端高度 */
+        margin: 0.5rem 0;
     }
-    
+
+    #resultImage {
+        max-width: 95%;
+        max-height: 50vh;
+    }
+
+    .controls {
+        margin: 1rem 0;
+        gap: 0.8rem;
+    }
+
     .action-btn {
+        padding: 0.7rem 1.2rem;
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 480px) {
+    body {
+        padding: 0.5rem;
+    }
+
+    .container {
+        padding: 1rem;
+    }
+
+    .cropper-container {
+        max-height: 40vh;
+        height: 250px;
+    }
+
+    .file-label {
         width: 100%;
-        justify-content: center;
+        padding: 0.8rem;
+    }
+}
+
+/* 小屏幕竖屏优化 */
+@media (max-height: 600px) and (orientation: portrait) {
+    .cropper-container {
+        max-height: 50vh;
+        height: 280px;
+    }
+}
+
+/* 打印优化 */
+@media print {
+    body {
+        background: white;
+        padding: 0;
+    }
+
+    .container {
+        box-shadow: none;
+        padding: 0;
+    }
+
+    .upload-section,
+    .crop-section,
+    .controls {
+        display: none !important;
+    }
+
+    #resultImage {
+        max-width: 100% !important;
+        box-shadow: none;
     }
 }
